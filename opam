@@ -1,0 +1,48 @@
+opam-version: "2.0"
+name: "more"
+synopsis: "A minimal toolkit for everyday OCaml programs"
+description: """\
+More is a toolkit for everyday OCaml programs. It focuses on providing
+an ergonomic system library and the minimal tools you end up needing
+in most of your programs.
+
+More **is not** an alternative or extended OCaml standard library.
+Despite the persistent myths, the OCaml standard library is fine and
+improving. More sometimes extends the standard library modules but,
+most of the time, only with the aim to test and eventually upstream
+the addition.
+
+More is distributed under the ISC license. It depends on the `unix`
+library. It optionally depends on the [`cmdliner`] library.
+
+Homepage: <https://erratique.ch/software/more/>
+
+[`cmdliner`]: <http://erratique.ch/software/cmdliner>"""
+maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
+authors: "The more programmers"
+license: "ISC"
+tags: ["os" "system" "path" "log" "unix" "org:erratique"]
+homepage: "https://erratique.ch/software/more"
+doc: "https://erratique.ch/software/more/doc"
+bug-reports: "https://github.com/dbuenzli/more/issues"
+depends: [
+  "ocaml" {>= "4.14.0"}
+  "ocamlfind" {build}
+  "ocamlbuild" {build}
+  "topkg" {build & >= "1.1.0"}
+]
+depopts: ["cmdliner"]
+conflicts: [
+  "cmdliner" {< "2.0.0"}
+]
+build: [
+  "ocaml"
+  "pkg/pkg.ml"
+  "build"
+  "--dev-pkg"
+  "%{dev}%"
+  "--with-cmdliner"
+  "%{cmdliner:installed}%"
+]
+dev-repo: "git+https://erratique.ch/repos/more.git"
+x-maintenance-intent: ["(latest)"]
