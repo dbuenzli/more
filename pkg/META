@@ -1,0 +1,23 @@
+description = "A minimal toolkit for everyday OCaml programs"
+version = "%%VERSION_NUM%%"
+requires = "unix"
+exports = "unix"
+archive(byte) = "more.cma"
+archive(native) = "more.cmxa"
+plugin(byte) = "more.cma"
+plugin(native) = "more.cmxs"
+exists_if = "more.cma more.cmxa"
+jsoo_runtime = "runtime.js"
+
+package "cli" (
+  directory = "cli"
+  description = "The more.cli library"
+  version = "%%VERSION_NUM%%"
+  requires = "more cmdliner"
+  exports = "more cmdliner"
+  archive(byte) = "more_cli.cma"
+  archive(native) = "more_cli.cmxa"
+  plugin(byte) = "more_cli.cma"
+  plugin(native) = "more_cli.cmxs"
+  exists_if = "more_cli.cma more_cli.cmxa"
+)
