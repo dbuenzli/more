@@ -1,0 +1,169 @@
+(*---------------------------------------------------------------------------
+   Copyright (c) 2020 The webs programmers. All rights reserved.
+   SPDX-License-Identifier: ISC
+  ---------------------------------------------------------------------------*)
+
+open B0_testing
+open More
+
+
+let eq_kind = Test.T.make ~pp:Net.Url.pp_kind ()
+
+let test_components =
+  Test.test "Net.Url.{kind,scheme,authority,path,query,fragment}" @@ fun () ->
+  let test url k s a p q f ~__POS__  =
+    let t =
+      let p = match p with None -> "" | Some p -> p in
+      let q = match q with None -> "" | Some q -> "?" ^ q in
+      let f = match f with None -> "" | Some f -> "#" ^ f in
+      let t = String.concat "" [p; q; f] in
+      if t = "" then None else Some t
+    in
+    let k' = Net.Url.kind url in
+    let s' = Net.Url.scheme url in
+    let a' = Net.Url.authority url in
+    let p' = Net.Url.path url in
+    let q' = Net.Url.query url in
+    let f' = Net.Url.fragment url in
+    let t' = Net.Url.target url in
+    Test.eq ~__POS__ eq_kind k' k;
+    Test.(option T.string) ~__POS__ s' s;
+    Test.(option T.string) ~__POS__ a' a;
+    Test.(option T.string) ~__POS__ p' p;
+    Test.(option T.string) ~__POS__ q' q;
+    Test.(option T.string) ~__POS__ f' f;
+    Test.(option T.string) ~__POS__ t' t;
+  in
+  test "http://example.org:80/hey-hopla/bli" `Absolute
+    (Some "http") (Some "example.org:80") (Some "/hey-hopla/bli") None None
+    ~__POS__ ;
+  test "" (`Relative `Empty) None None None None None
+    ~__POS__;
+  test "//example.org:80/hey-hopla/bli" (`Relative `Scheme)
+    None (Some "example.org:80") (Some "/hey-hopla/bli") None None
+    ~__POS__;
+  test "/huhuhu:80/hey-hopla/bli" (`Relative `Absolute_path)
+    None None (Some "/huhuhu:80/hey-hopla/bli") None None
+    ~__POS__;
+  test "huhuhu/hey-hopla/bli" (`Relative `Relative_path)
+    None None (Some "huhuhu/hey-hopla/bli") None None
+    ~__POS__;
+  test "hopla://example.org/?#" `Absolute
+    (Some "hopla") (Some "example.org") (Some "/") (Some "") (Some "")
+    ~__POS__;
+  test "https://example.org/hey?bla#blu" `Absolute
+    (Some "https") (Some "example.org") (Some "/hey") (Some "bla") (Some "blu")
+    ~__POS__;
+  test "https://example.org?bla#blu" `Absolute
+    (Some "https") (Some "example.org") None (Some "bla") (Some "blu")
+    ~__POS__;
+  test "https://example.org/bla#?blu" `Absolute
+    (Some "https") (Some "example.org") (Some "/bla") None (Some "?blu")
+    ~__POS__;
+  ()
+
+let test_append =
+  Test.test "Net.Url.append" @@ fun () ->
+  let test root rel res ~__POS__ =
+    Test.string (Net.Url.append root rel) res ~__POS__
+  in
+  (* `Abs *)
+  test "https://example.org" "https://ocaml.org" "https://ocaml.org" ~__POS__;
+  (* `Rel Scheme *)
+  test "https://example.org" "//example.org/b" "https://example.org/b" ~__POS__;
+  test "ftp://example.org/hi" "//example.org/b" "ftp://example.org/b" ~__POS__;
+  (* `Rel `Rel_path *)
+  test "https://example.org/hi" "b" "https://example.org/b" ~__POS__;
+  test "https://example.org/hi" "b/a" "https://example.org/b/a" ~__POS__;
+  test "https://example.org/hi/" "b/a" "https://example.org/hi/b/a" ~__POS__;
+  test "https://example.org" "b/a" "https://example.org/b/a" ~__POS__;
+  test "https://example.org/" "b/a" "https://example.org/b/a" ~__POS__;
+  (* `Rel `Abs_path *)
+  test "https://example.org/hi/ha" "/b/a" "https://example.org/b/a" ~__POS__;
+  test "https://example.org/" "/b/a" "https://example.org/b/a" ~__POS__;
+  test "https://example.org" "/b/a" "https://example.org/b/a" ~__POS__;
+  (* `Rel `Empty *)
+  test "https://example.org/hey" "" "https://example.org/hey" ~__POS__;
+  test "https://example.org/" "" "https://example.org/" ~__POS__;
+  test "https://example.org" "" "https://example.org" ~__POS__;
+  ()
+
+let test_of_url =
+  Test.test "Net.Url.of_url" @@ fun () ->
+  let upd ?s ?a ?p ?q ?f u u' ~__POS__ =
+    let u'' =
+      Net.Url.of_url u ?scheme:s ?authority:a ?path:p ?query:q ?fragment:f ()
+    in
+    Test.string u' u'' ~__POS__
+  in
+  upd ~s:None "https://example.org/hey?bla" "//example.org/hey?bla"
+    ~__POS__;
+  upd ~s:None ~a:None "https://example.org/hey?bla" "/hey?bla"
+    ~__POS__;
+  upd ~s:(Some "urn") ~a:None "https://example.org/hey?bla" "urn:/hey?bla"
+    ~__POS__;
+  upd ~f:(Some "f") "https://example.org" "https://example.org#f"
+    ~__POS__;
+  upd ~f:(Some "f") "https://example.org/" "https://example.org/#f"
+    ~__POS__;
+  upd ~q:(Some "q")
+    "https://example.org/#?trick" "https://example.org/?q#?trick"
+    ~__POS__;
+  ()
+
+let test_authority =
+  Test.test "Net.Url.Authority.*" @@ fun () ->
+  let test authority u h p ~__POS__  =
+    let u' = Net.Url.Authority.userinfo authority in
+    let h' = Net.Url.Authority.host authority in
+    let p' = Net.Url.Authority.port authority in
+    Test.(option T.string) u' u ~__POS__;
+    Test.string h' h ~__POS__;
+    Test.(option T.int) p' p ~__POS__;
+  in
+  test "user:pass@example.org:3434"
+    (Some "user:pass") "example.org" (Some 3434) ~__POS__;
+  test "user:pass@:3434"
+    (Some "user:pass") "" (Some 3434) ~__POS__;
+  test "@:3434"
+    (Some "") "" (Some 3434) ~__POS__;
+  test "@:"
+    (Some "") "" None ~__POS__;
+  test "example.org:a"
+    None "example.org:a" None ~__POS__;
+  test ""
+    None "" None ~__POS__;
+  ()
+
+let test_to_absolute =
+  Test.test "Net.Url.to_absolute" @@ fun () ->
+  let test ?__POS__ ~scheme ~root_path u u' =
+    Test.string (Net.Url.to_absolute ~scheme ~root_path u) u' ?__POS__
+  in
+  (* Absolute *)
+  test ~scheme:"file" ~root_path:None         "http:///h" "http:///h" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a")  "http:///h" "http:///h" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a/") "http:///h" "http:///h" ~__POS__;
+  (* Scheme relative *)
+  test ~scheme:"file" ~root_path:None         "//host/b" "file://host/b"
+    ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a")  "//host/b" "file://host/b"
+    ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a/") "//host/b" "file://host/b"
+    ~__POS__;
+  (* Path absolute *)
+  test ~scheme:"file" ~root_path:None         "/b" "file:///b" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a")  "/b" "file:///b" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a/") "/b" "file:///b" ~__POS__;
+  (* Path relative *)
+  test ~scheme:"file" ~root_path:None         "b" "file://b" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a")  "b" "file:///a/b" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a/") "b" "file:///a/b" ~__POS__;
+  (* Path empty *)
+  test ~scheme:"file" ~root_path:None         "" "file://" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a")  "" "file:///a" ~__POS__;
+  test ~scheme:"file" ~root_path:(Some "/a/") "" "file:///a/" ~__POS__;
+  ()
+
+let main () = Test.main @@ fun () -> Test.autorun ()
+let () = if !Sys.interactive then () else exit (main ())

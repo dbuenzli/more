@@ -1,0 +1,50 @@
+{0 More {%html: <span class="version">%%VERSION%%</span>%}}
+
+More is a toolkit for everyday OCaml programs. It focuses on providing
+an ergonomic system library and the minimal tools you end up needing
+in most of your programs.
+
+More {b is not} an alternative or extended OCaml standard
+library. Despite the persistent myths, the OCaml standard library is
+fine and improving. More sometimes extends the standard library
+modules but, most of the time, only with the aim to test and
+eventually upstream the addition.
+
+See the {!quick_start} and the {{!page-cookbook}cookbook}.
+
+{1:library_more Library [more]}
+
+{!modules: More}
+{!modules:
+More.Cmd
+More.Fmt
+More.Fpath
+More.Mtime
+More.Log
+More.Net
+More.Os
+}
+
+{2:extended_stdlib Extended [Stdlib] modules}
+
+{!modules:
+More.Char
+More.List
+More.Result
+More.String
+More.Type
+}
+
+{1:library_more_cli Library [more.cli]}
+
+{!modules: More_cli}
+
+{1:quick_start Quick start}
+
+{[
+open More
+
+(* Be happy *)
+]}
+
+And see a {{!page-cookbook.blueprint_color_log}starting blueprint}.
