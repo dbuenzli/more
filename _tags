@@ -1,0 +1,12 @@
+true : bin_annot, safe_string
+<_b0> : -traverse
+
+<src> : include
+<src/*> : no_alias_deps
+
+<src/*> : package(unix)
+<src/more.{cma,cmxa}> : record_more_stubs
+<src/more.cmxs> : link_more_stubs
+
+<src/cli> : include
+<src/cli/**> : package(cmdliner)
